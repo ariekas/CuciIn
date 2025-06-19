@@ -18,6 +18,7 @@ exports.login = async (email, password) => {
     )
 
     console.log(`Token: ${token}`)
+    console.log(user)
 
     return {
         user: {
