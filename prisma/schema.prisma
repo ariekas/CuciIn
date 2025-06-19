@@ -1,0 +1,277 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // atau "postgresql" sesuai kebutuhan
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UsersRole {
+  admin
+  penjaga
+  kurir
+  pelanggan
+}
+
+enum ServiceTypes {
+  cuci
+  setrika
+  cuci_setrika
+  ekspres
+  kiloan
+}
+
+enum OrderStatuses {
+  pending
+  confirmed
+  picked_up
+  in_process
+  ready
+  delivered
+  cancelled
+}
+
+enum PaymentMethods {
+  cod
+  transfer
+  qris
+}
+
+enum PaymentStatuses {
+  unpaid
+  pending_confirmation
+  paid
+  refunded
+}
+
+enum DiscountTypes {
+  percentage
+  fixed_amount
+}
+
+enum DeliveryTypes {
+  pickup
+  delivery
+}
+
+enum DeliveryStatuses {
+  scheduled
+  on_the_way
+  completed
+  failed
+}
+
+enum KurirCheckpointStatus {
+  pickup_location
+  on_route
+  delivery_location
+  returned
+}
+
+// Models
+model User {
+  id             String    @id @default(uuid())
+  username       String    @unique
+  email          String    @unique 
+  password       String    
+  role           UsersRole @default(pelanggan)
+  is_member      Boolean   @default(false)
+  member_since   DateTime?
+  profile_image  String?  
+  is_active      Boolean   @default(true)
+  email_verified Boolean   @default(false)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @default(now()) @updatedAt
+
+  // Relations
+  customer_orders    Order[]         @relation("CustomerOrders")
+  penjaga_orders     Order[]         @relation("PenjagaOrders")
+  pickup_orders      Order[]         @relation("PickupOrders")
+  delivery_orders    Order[]         @relation("DeliveryOrders")
+  user_discounts     UserDiscount[]
+  locations          Location[]
+  deliveries         Delivery[]
+  kurir_trackings    KurirTracking[]
+  order_histories    OrderHistory[]
+
+  @@map("users")
+}
+
+model Service {
+  id               String       @id @default(uuid())
+  service_name     String      
+  service_type     ServiceTypes
+  price_per_kg     Decimal      
+  min_weight       Decimal      @default(0.5) 
+  estimated_hours  Int
+  description      String?     
+  is_active        Boolean      @default(true)
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @default(now()) @updatedAt
+
+  // Relations
+  orders Order[]
+
+  @@map("services")
+}
+
+model Order {
+  id                     String         @id @default(uuid())
+  order_number           String         @unique 
+  customer_id            String
+  service_id             String
+  penjaga_id             String?
+  kurir_pickup_id        String?
+  kurir_delivery_id      String?
+  estimated_weight       Decimal      
+  actual_weight          Decimal?       
+  special_notes          String?        
+  pickup_date            DateTime?
+  delivery_date          DateTime?
+  estimated_completion   DateTime?
+  order_status           OrderStatuses  @default(pending)
+  payment_method         PaymentMethods
+  payment_status         PaymentStatuses @default(unpaid)
+  payment_proof          String?       
+  subtotal               Decimal        
+  discount_amount        Decimal        @default(0) 
+  total_amount           Decimal       
+  created_at             DateTime       @default(now())
+  updated_at             DateTime       @default(now()) @updatedAt
+
+  // Relations
+  customer         User           @relation("CustomerOrders", fields: [customer_id], references: [id])
+  service          Service        @relation(fields: [service_id], references: [id])
+  penjaga          User?          @relation("PenjagaOrders", fields: [penjaga_id], references: [id])
+  kurir_pickup     User?          @relation("PickupOrders", fields: [kurir_pickup_id], references: [id])
+  kurir_delivery   User?          @relation("DeliveryOrders", fields: [kurir_delivery_id], references: [id])
+  user_discounts   UserDiscount[]
+  deliveries       Delivery[]
+  order_histories  OrderHistory[]
+
+  @@map("orders")
+}
+
+model Discount {
+  id                String        @id @default(uuid())
+  discount_name     String       
+  discount_type     DiscountTypes
+  discount_value    Decimal       
+  min_order_amount  Decimal       @default(0) 
+  max_discount      Decimal?      
+  start_date        DateTime
+  end_date          DateTime
+  is_member_only    Boolean       @default(false)
+  usage_limit       Int?
+  used_count        Int           @default(0)
+  is_active         Boolean       @default(true)
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @default(now()) @updatedAt
+
+  // Relations
+  user_discounts UserDiscount[]
+
+  @@map("discounts")
+}
+
+model UserDiscount {
+  id          String    @id @default(uuid())
+  user_id     String
+  discount_id String
+  order_id    String?
+  used_at     DateTime?
+  created_at  DateTime  @default(now())
+
+  // Relations
+  user     User      @relation(fields: [user_id], references: [id])
+  discount Discount  @relation(fields: [discount_id], references: [id])
+  order    Order?    @relation(fields: [order_id], references: [id])
+
+  @@map("user_discounts")
+}
+
+model Location {
+  id             String   @id @default(uuid())
+  user_id        String
+  location_name  String   
+  address        String   
+  latitude       Decimal? 
+  longitude      Decimal? 
+  postal_code    String? 
+  city           String   
+  province       String   
+  is_primary     Boolean  @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
+
+  // Relations
+  user                    User       @relation(fields: [user_id], references: [id])
+  pickup_deliveries       Delivery[] @relation("PickupDeliveries")
+  delivery_deliveries     Delivery[] @relation("DeliveryDeliveries")
+
+  @@map("locations")
+}
+
+model Delivery {
+  id                    String           @id @default(uuid())
+  order_id              String
+  kurir_id              String
+  pickup_location_id    String?
+  delivery_location_id  String?
+  delivery_type         DeliveryTypes
+  scheduled_time        DateTime
+  actual_time           DateTime?
+  distance_km           Decimal?         
+  estimated_duration    Int?
+  delivery_status       DeliveryStatuses @default(scheduled)
+  notes                 String?          
+  created_at            DateTime         @default(now())
+  updated_at            DateTime         @default(now()) @updatedAt
+
+  // Relations
+  order             Order            @relation(fields: [order_id], references: [id])
+  kurir             User             @relation(fields: [kurir_id], references: [id])
+  pickup_location   Location?        @relation("PickupDeliveries", fields: [pickup_location_id], references: [id])
+  delivery_location Location?        @relation("DeliveryDeliveries", fields: [delivery_location_id], references: [id])
+  kurir_trackings   KurirTracking[]
+
+  @@map("deliveries")
+}
+
+model KurirTracking {
+  id                 String                @id @default(uuid())
+  kurir_id           String
+  delivery_id        String?
+  current_latitude   Decimal             
+  current_longitude  Decimal              
+  status_checkpoint  KurirCheckpointStatus
+  tracked_at         DateTime
+  created_at         DateTime              @default(now())
+
+  // Relations
+  kurir    User      @relation(fields: [kurir_id], references: [id])
+  delivery Delivery? @relation(fields: [delivery_id], references: [id])
+
+  @@map("kurir_tracking")
+}
+
+model OrderHistory {
+  id              String   @id @default(uuid())
+  order_id        String
+  previous_status String   
+  new_status      String   
+  changed_by      String
+  notes           String?  
+  changed_at      DateTime @default(now())
+
+  // Relations
+  order      Order @relation(fields: [order_id], references: [id])
+  changed_by_user User  @relation(fields: [changed_by], references: [id])
+
+  @@map("order_history")
+}
