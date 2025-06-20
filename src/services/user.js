@@ -1,16 +1,6 @@
 const prisma = require("../config/dataBase");
 const bcrypt = require("bcrypt");
-
-
-function pickFields(source, allowedKeys){
-    return object.keys(source)
-    .filter(key => allowedKeys.includes(key))
-    .reduce((obj, key) => {
-        obj[key] = source[key]
-        return obj
-    }, {})
-}
-
+const { pickFields } = require("../utils/pickFields");
 function validateRole(role) {
     const allowedRoles = ['kurir', 'penjaga'];
     if (!allowedRoles.includes(role)) {
@@ -45,7 +35,7 @@ exports.create = async ({ username, email, password, role }) => {
     }
    })
 
-   return pickFields(user['id', 'username', 'email', 'role'])
+   return pickFields(user, ['id', 'username', 'email', 'role'])
 }
 
 exports.getAll = async () => {
@@ -55,7 +45,7 @@ exports.getAll = async () => {
         id:true,
         username:true,
         email:true,
-        role:true
+        role:true   
     }
    })
 
