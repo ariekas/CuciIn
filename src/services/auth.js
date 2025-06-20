@@ -21,20 +21,17 @@ exports.login = async (email, password) => {
   console.log(user);
 
   return {
-    user: {
       id: user.id,
       email: user.email,
       role: user.role,
       username: user.username,
       fullName: user.fullName,
-    },
   };
 };
 
 exports.register = async ({username, email, password, role = 'pelanggan'}) => {
   const checkUser = await prisma.user.findFirst({where: {OR: [{email}, {username}]}
   })
-
   if(checkUser) throw new Error('Email or Username already exist')
 
     const hashPassword = await bcrypt.hash(password, 10)

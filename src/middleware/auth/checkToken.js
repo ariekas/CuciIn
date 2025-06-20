@@ -13,3 +13,13 @@ exports.checkToken = async (req, res, next) => {
         res.status(400).json({message: 'Token Invalid'})
     }
 }
+
+// module.exports = function restrictTo(...roles) {
+//     return (req, res, next) => {
+//       if (!roles.includes(req.user?.role)) {
+//         return res.status(403).json({ message: 'Access Denied' });
+//       }
+//       next();
+//     };
+//   };
+  

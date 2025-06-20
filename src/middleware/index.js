@@ -4,7 +4,8 @@ const {notFound} = require('./notFound/index')
 module.exports = {
     auth:{
       checkToken,
-      validateField
+      validateField,
+
     },
     notFound:{
         notFound
