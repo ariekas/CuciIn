@@ -1,64 +1,77 @@
 const prisma = require("../config/dataBase");
 const bcrypt = require("bcrypt");
 
-exports.create = async ({ username, email, password, role }) => {
-    if (!['kurir', 'penjaga'].includes(role)){
-        throw new Error('Role must be kurir or penjaga')
+
+function pickFields(source, allowedKeys){
+    return object.keys(source)
+    .filter(key => allowedKeys.includes(key))
+    .reduce((obj, key) => {
+        obj[key] = source[key]
+        return obj
+    }, {})
+}
+
+function validateRole(role) {
+    const allowedRoles = ['kurir', 'penjaga'];
+    if (!allowedRoles.includes(role)) {
+      throw new Error(`Role must be one of: ${allowedRoles.join(', ')}`);
     }
+  }
 
-    const checkUser = await prisma.user.findFirst({where: {OR: [{email}, {username}]}
-    })
-    if(checkUser) throw new Error('Email or Username already exist')
+  async function checkUser({ email, username }) {
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
+    if (existing) {
+      throw new Error('Email or Username already exists');
+    }
+  }
 
-    const hashPassword = await bcrypt.hash(password, 10)
-    const user = await prisma.user.create({
-        data:{
-            username,
-            email,
-            password: hashPassword,
-            role
-        }
-    })
+exports.create = async ({ username, email, password, role }) => {
+   validateRole(role);
 
-    return {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      };
+   await checkUser({email, username})
+
+   const hashPassword = await bcrypt.hash(password,10)
+
+   const user = await prisma.user.create({
+    data:{
+        username,
+        email,
+        password: hashPassword,
+        role
+    }
+   })
+
+   return pickFields(user['id', 'username', 'email', 'role'])
 }
 
 exports.getAll = async () => {
-    return prisma.user.findMany({
-        where:{role:{in:['kurir', 'penjaga']}},
-        select:{
-            id: true,
-            username: true,
-            email: true,
-            role: true,
-        }
-    })
+   const users = await prisma.user.findMany({
+    where:{role:{in:['kurir', 'pelanggan']}},
+    select:{
+        id:true,
+        username:true,
+        email:true,
+        role:true
+    }
+   })
+
+   return users
 }
 
 exports.edit = async (id, data) => {
-const fieldCanEdit= ['username', 'email', 'role']
-const dataUser = {}
-
-for (const key of fieldCanEdit) {
-    if(data[key]) dataUser[key] = data[key]
-}
+const allowedFields = ['username', 'email', 'role']
+const update = pickFields(data, allowedFields)
 
 const user = await prisma.user.update({
-    where : {id},
-    data: dataUser
+    where:{id},
+    data:update
 })
 
-return {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    role: user.role,
-}
+return pickFields(user, ['id', 'username', 'email', 'role'])
 }
 
 exports.delete = async (id) => {
