@@ -11,7 +11,6 @@ exports.create = async ({ username, email, password, role }) => {
     if(checkUser) throw new Error('Email or Username already exist')
 
     const hashPassword = await bcrypt.hash(password, 10)
-
     const user = await prisma.user.create({
         data:{
             username,
@@ -37,7 +36,35 @@ exports.getAll = async () => {
             username: true,
             email: true,
             role: true,
-            createdAt: true,
         }
     })
+}
+
+exports.edit = async (id, data) => {
+const fieldCanEdit= ['username', 'email', 'role']
+const dataUser = {}
+
+for (const key of fieldCanEdit) {
+    if(data[key]) dataUser[key] = data[key]
+}
+
+const user = await prisma.user.update({
+    where : {id},
+    data: dataUser
+})
+
+return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+}
+}
+
+exports.delete = async (id) => {
+await prisma.user.delete({
+    where:{id}
+})
+
+return{message: 'User Deleted'}
 }
