@@ -3,8 +3,8 @@ const userService = require('../services/user')
 exports.createUser = async (req, res) => {
     try {
         const user = await userService.create(req.body)
-        res.status(200).json({
-            message: `User Success Created`,
+        return res.status(200).json({
+            message: 'User Created Success',
             data: user
         })
     } catch (error) {

@@ -78,6 +78,4 @@ exports.delete = async (id) => {
 await prisma.user.delete({
     where:{id}
 })
-
-return{message: 'User Deleted'}
 }
