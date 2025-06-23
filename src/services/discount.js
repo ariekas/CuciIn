@@ -15,8 +15,17 @@ exports.getAll = async () => {
     })
 }
 
-exports.getById = async () => {
-    return prisma.discount.findUnique({
+exports.update = async (id,data) => {
+    const discount = await prisma.discount.update({
+        where : {id},
+        data
+    })
+    return discount
+}
+
+exports.delete = async (id) => {
+    await prisma.discount.delete({
         where: {id}
     })
+    return { message : 'Discount Deleted'}
 }
