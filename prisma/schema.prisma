@@ -99,7 +99,6 @@ model User {
   kurir_trackings    KurirTracking[]
   order_histories    OrderHistory[]
 
-  @@map("users")
 }
 
 model Service {
@@ -117,7 +116,6 @@ model Service {
   // Relations
   orders Order[]
 
-  @@map("services")
 }
 
 model Order {
@@ -154,7 +152,6 @@ model Order {
   deliveries       Delivery[]
   order_histories  OrderHistory[]
 
-  @@map("orders")
 }
 
 model Discount {
@@ -176,7 +173,6 @@ model Discount {
   // Relations
   user_discounts UserDiscount[]
 
-  @@map("discounts")
 }
 
 model UserDiscount {
@@ -192,7 +188,6 @@ model UserDiscount {
   discount Discount  @relation(fields: [discount_id], references: [id])
   order    Order?    @relation(fields: [order_id], references: [id])
 
-  @@map("user_discounts")
 }
 
 model Location {
@@ -214,7 +209,6 @@ model Location {
   pickup_deliveries       Delivery[] @relation("PickupDeliveries")
   delivery_deliveries     Delivery[] @relation("DeliveryDeliveries")
 
-  @@map("locations")
 }
 
 model Delivery {
@@ -240,7 +234,6 @@ model Delivery {
   delivery_location Location?        @relation("DeliveryDeliveries", fields: [delivery_location_id], references: [id])
   kurir_trackings   KurirTracking[]
 
-  @@map("deliveries")
 }
 
 model KurirTracking {
@@ -257,7 +250,6 @@ model KurirTracking {
   kurir    User      @relation(fields: [kurir_id], references: [id])
   delivery Delivery? @relation(fields: [delivery_id], references: [id])
 
-  @@map("kurir_tracking")
 }
 
 model OrderHistory {
@@ -273,5 +265,4 @@ model OrderHistory {
   order      Order @relation(fields: [order_id], references: [id])
   changed_by_user User  @relation(fields: [changed_by], references: [id])
 
-  @@map("order_history")
 }
