@@ -1,10 +1,14 @@
 const {checkToken} = require('./auth/checkToken')
-const {validateField} = require('./auth/validateField')
+const {checkPassword,} = require('./crud/checkPassword')
 const {notFound} = require('./notFound/index')
+const {restrictTo} = require('./crud/restrictTo')
 module.exports = {
     auth:{
       checkToken,
-      validateField,
+      checkPassword,
+    },
+    crud:{
+      restrictTo
 
     },
     notFound:{
