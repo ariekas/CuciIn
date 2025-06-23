@@ -41,6 +41,15 @@ exports.deleteDiscount = async (req, res) => {
         const deleteDiscount = await discountService.delete(req.params.id)
         res.json({ status: 'success', message: deleteDiscount.message });
     } catch (error) {
-        res.status(400).json({message: error.message})
+        res.status(400).json({message: error.message})  
+    }
+}
+
+exports.getAvailable = async (req, res) => {
+    try {
+        const is_member = req.query.is_member == 'true'
+        const result = await discountService.getAvailable(is_member)
+    } catch (error) {
+        
     }
 }

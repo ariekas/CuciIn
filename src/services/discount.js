@@ -29,3 +29,18 @@ exports.delete = async (id) => {
     })
     return { message : 'Discount Deleted'}
 }
+
+exports.getAvailable = async ({is_member}) => {
+    const now = new Date()
+
+    return prisma.discount.findMany({
+        where: {
+            is_active :true,
+            is_member_only : true,
+            start_date: {lte: now},
+            end_date: {gte: now},
+            usage_limit: {gt: 0}
+        },
+        orderBy: { start_date : 'asc'}
+    })
+}
