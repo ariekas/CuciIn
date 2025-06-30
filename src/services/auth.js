@@ -18,7 +18,6 @@ exports.login = async (email, password) => {
   );
 
   console.log(`Token: ${token}`);
-  console.log(user);
 
   return {
       id: user.id,
@@ -44,13 +43,10 @@ exports.register = async ({username, email, password, role = 'pelanggan'}) => {
         role
       }
     })
-
     return{
       id: user.id,
       username: user.username,
       email: user.email,
       role: user.role,
     }
-    
-    
 }

@@ -1,6 +1,6 @@
-exports.checkPassword = (req, res, next) => {
-    const { username, email, password, fullName } = req.body;
-    if (!username || !email || !password || !fullName) {
+exports.checkField = (req, res, next) => {
+    const { username, email, password } = req.body;
+    if (!username || !email || !password ) {
       return res.status(400).json({ message: 'All field must be have value' });
     }
 
